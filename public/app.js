@@ -18,7 +18,7 @@ function createWindow() {
         center: true,
         darkTheme: true,
         webPreferences: {
-            nodeIntegration: true
+            nodeIntegration: true,
         }
     })
 
@@ -73,7 +73,7 @@ async function createAppMenu() {
 }
 
 app.whenReady().then(createAppMenu).then(createWindow).catch((e) => {
-    log(e)
+    log.log(e)
     new Notification({
         title: 'Failed to initialize application',
         body: 'There was an error starting application resources.'
