@@ -1,14 +1,17 @@
-import DataStore from "nedb";
-import { remote } from "electron";
-import { join } from "path";
+const DataStore = window.require("nedb")
+const { remote } = window.require("electron")
+const { join } = window.require("path");
 
 const databases: {
-    product: DataStore | null,
-    transaction: DataStore | null
+    product: typeof DataStore | null,
+    transaction: typeof DataStore | null,
+    app: typeof DataStore | null
 } = {
     product: null,
-    transaction: null
+    transaction: null,
+    app: null
 }
+
 export const getProductDB = async () => {
     if (!databases.product) {
         const { app } = remote
@@ -28,4 +31,15 @@ export const getTransactionDB = async () => {
         })
     }
     return databases.transaction
+}
+
+export const getAppDB = async () => {
+    if (!databases.app) {
+        const { app } = remote
+        databases.app = new DataStore({
+            filename: join(app.getPath('appData'), 'app.db'),
+            autoload: true,
+        })
+    }
+    return databases.app
 }

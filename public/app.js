@@ -8,6 +8,12 @@ log.transports.file.level = 'silly'
 
 app.requestSingleInstanceLock()
 
+const firstRun = process.argv[1] === '--squirrel-firstrun'
+
+if (firstRun) {
+    log.info('First run --- Welcome!')
+}
+
 function createWindow() {
     const win = new BrowserWindow({
         width: 800,
@@ -17,17 +23,30 @@ function createWindow() {
         show: false,
         center: true,
         darkTheme: true,
+        backgroundColor: '#111',
+        autoHideMenuBar: true,
         webPreferences: {
             nodeIntegration: true,
-        }
+            enableRemoteModule: true
+        },
+        title: 'Inventory Application'
     })
 
+    log.info('Starting application window...')
+
     if (process.env.LOAD_HOST) {
-        win.loadURL(process.env.LOAD_HOST).then(() => win.show())
+        win.loadURL(process.env.LOAD_HOST).then(() => {
+            win.show()
+            win.once('focus', () => win.flashFrame(false))
+            win.flashFrame(true)
+        })
     } else {
-        win.loadFile(resolve(process.env.LOAD_URL)).then(() => win.show())
+        win.loadFile(resolve(process.env.LOAD_URL)).then(() => {
+            win.show()
+            win.once('focus', () => win.flashFrame(false))
+            win.flashFrame(true)
+        })
     }
-    win.webContents.openDevTools()
 }
 
 async function createAppMenu() {
@@ -73,7 +92,7 @@ async function createAppMenu() {
 }
 
 app.whenReady().then(createAppMenu).then(createWindow).catch((e) => {
-    log.log(e)
+    log.error(e)
     new Notification({
         title: 'Failed to initialize application',
         body: 'There was an error starting application resources.'

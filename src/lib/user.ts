@@ -1,5 +1,11 @@
 import firebase from 'firebase'
 
+export enum UserType {
+    ADMIN,
+    SUPERVISOR,
+    USER,
+}
+
 export class User {
     username: string
     fUser: firebase.User
