@@ -17,6 +17,7 @@ firebase.firestore().settings({
 })
 firebase.firestore().enablePersistence()
 firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+firebase.storage().setMaxUploadRetryTime(30000)
 
 export const db = firebase.firestore()
 export const auth = firebase.auth()

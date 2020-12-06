@@ -1,13 +1,14 @@
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { Button, Form, Input, message } from 'antd';
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthHandler } from "../components/guard";
-import { APPLICATION_CONTEXT } from "../lib";
+import { APPLICATION_CONTEXT, VIEW_CONTEXT } from "../lib";
 import { LINKS } from '../lib/links';
 
 export function AuthPage() {
     const ctx = useContext(APPLICATION_CONTEXT)
+    const viewCTX=useContext(VIEW_CONTEXT)
     const [state, setState] = useState({ loading: false })
 
     const onSubmit = useCallback(async ({ username, password }) => {
@@ -18,10 +19,14 @@ export function AuthPage() {
         } catch (e) {
             console.log(e)
             message.error(e.message || 'Failed to login!')
-        } finally {
             setState({ ...state, loading: false })
         }
     }, [state])
+
+    
+    useEffect(() => {
+        viewCTX.setTitle(' ')
+    }, [])
 
     return (
         <AuthHandler >
@@ -59,6 +64,7 @@ export function AuthPage() {
 
 export function RegisterPage() {
     const ctx = useContext(APPLICATION_CONTEXT)
+    const viewCTX=useContext(VIEW_CONTEXT)
     const [state, setState] = useState({ loading: false })
 
     const onSubmit = useCallback(async ({ username, password }) => {
@@ -69,10 +75,14 @@ export function RegisterPage() {
         } catch (e) {
             console.log(e)
             message.error(e.message || 'Failed to register!')
-        } finally {
             setState({ ...state, loading: false })
         }
     }, [state])
+
+    
+    useEffect(() => {
+        viewCTX.setTitle(' ')
+    }, [])
 
     return (
         <AuthHandler >

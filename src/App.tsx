@@ -11,6 +11,7 @@ import { LINKS } from './lib/links';
 import { User } from './lib/user';
 import { AccountPage } from "./pages/account";
 import { AuthPage, RegisterPage } from './pages/auth';
+import { AddProductPage } from "./pages/product";
 
 function App() {
   const ctx = useContext(APPLICATION_CONTEXT)
@@ -20,7 +21,7 @@ function App() {
   const [user, setUser] = useState(null as null | undefined | User)
   const history = useHistory()
 
-  const onMenuClick = useCallback(({ item, key, keyPath, domEvent }: { [key: string]: any }) => {
+  const onMenuClick = useCallback(({ key }: { [key: string]: any }) => {
     //@ts-ignore
     const selected = LINKS[key]
     if (selected) {
@@ -49,7 +50,7 @@ function App() {
   return (
     <VIEW_CONTEXT.Provider value={{ title, setTitle, user, setLoading: (loading) => setState({ ...state, loading }) }} >
       <Layout hasSider className='layout is-clipped'>
-        <Layout.Sider collapsible collapsed={state.collapsed} width={250} onCollapse={(collapsed) => setState({ ...state, collapsed })}>
+        <Layout.Sider collapsible collapsed={state.collapsed} width={250} collapsedWidth={80} onCollapse={(collapsed) => setState({ ...state, collapsed })}>
           <Menu selectedKeys={[currentMenu]} onClick={onMenuClick} mode='inline' theme='dark' >
             <SubMenu key='products' icon={<DatabaseFilled />} title='Products'>
               <Menu.Item key={'addProduct'} icon={<PlusOutlined />}>Add Product</Menu.Item>
@@ -75,7 +76,7 @@ function App() {
               <Redirect to={LINKS.viewProduct} />
             </AuthGuard>
             <AuthGuard path={LINKS.viewProduct} strict />
-            <AuthGuard path={LINKS.addProduct} strict />
+            <AuthGuard path={LINKS.addProduct} component={AddProductPage} strict />
             <AuthGuard path={LINKS.viewTransaction} strict />
             <AuthGuard path={LINKS.addTransaction} strict />
             <AuthGuard path={LINKS.account} component={AccountPage} strict exact />

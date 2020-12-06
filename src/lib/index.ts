@@ -51,6 +51,15 @@ export class Application {
                     if (user && !user.isAnonymous) {
                         await this.inflateUser(user)
 
+                        const { metadata: { creationTime, lastSignInTime } } = user
+                        if (creationTime && creationTime !== lastSignInTime) {
+                            // This is not the first signin attempt for this user. Check for role changes!
+                            const userData = await usersRef.doc(user.uid).get()
+                            if (userData.exists) {
+                                this.user!.type = userData.data()?.type || UserType.USER
+                            }
+                        }
+
                         if (this.loginListener) {
                             this.loginListener()
                         }
@@ -186,10 +195,9 @@ export class Application {
                     if (err) {
                         // If error occurred during lookup, assume that there is no Internet
                         console.log(err)
-                        log.error(err)
+                        log.error('check Internet connection: ', err)
                         return res(false)
                     }
-                    console.log(ips)
                     if (ips.length < 1) {
                         // The provided host was not resolved, hence there is no Internet access...or Google is probbably extinct...whichever is likely
                         return res(false)

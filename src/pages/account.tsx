@@ -1,5 +1,5 @@
-import { LockOutlined, SmileFilled, UserOutlined } from '@ant-design/icons';
-import { Button, Form, Input, message, Popconfirm, Result } from 'antd';
+import { ExclamationCircleOutlined, LockOutlined, SmileFilled, UserOutlined } from '@ant-design/icons';
+import { Button, Form, Input, message, Modal, Popconfirm, Result } from 'antd';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthHandler } from "../components/guard";
@@ -9,7 +9,7 @@ import { LINKS } from '../lib/links';
 export function AccountPage() {
     const ctx = useContext(APPLICATION_CONTEXT)
     const viewCTX = useContext(VIEW_CONTEXT)
-    const [state, setState] = useState({ loading: false, showPopup: false })
+    const [state, setState] = useState({ loading: false, })
 
     const onClick = useCallback(async () => {
         setState({ ...state, loading: true })
@@ -25,18 +25,22 @@ export function AccountPage() {
     }, [state])
 
     useEffect(() => {
-        const title = viewCTX.title
         viewCTX.setTitle('Account')
-
-        return () => viewCTX.setTitle(title)
     }, [])
 
     return (
         <div style={{ display: 'flex', flex: 1, justifyContent: 'center', flexDirection: 'column', alignItems: 'center' }}>
-            <Result status='info' icon={<SmileFilled />} subTitle={`Signed in as ${ctx.user!.username}`} extra={
-                <Popconfirm visible={state.showPopup} onCancel={() => setState({ ...state, showPopup: false })} onConfirm={onClick} title='Sign out of application?'>
-                    <Button danger type='primary' shape='round' onClick={() => setState({ ...state, showPopup: true })} loading={state.loading}>SIGN OUT</Button>
-                </Popconfirm>
+            <Result status='info' icon={<SmileFilled />} subTitle={`Currently authenticated user is ${ctx.user!.username}`} extra={
+                <Button danger type='primary' shape='round' onClick={() => {
+                    Modal.confirm({
+                        title: 'Do you want to sign out?',
+                        icon: <ExclamationCircleOutlined />,
+                        content: 'If you sign out, data stored will not be lost, but you will be unable to get back into the application without access to the Internet',
+                        okText: 'sign out',
+                        cancelText: 'cancel',
+                        onOk: onClick
+                    });
+                }} loading={state.loading}>SIGN OUT</Button>
             } />
         </div>
     )

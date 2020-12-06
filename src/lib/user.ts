@@ -8,6 +8,7 @@ export enum UserType {
 
 export class User {
     username: string
+    type: UserType = UserType.USER
     fUser: firebase.User
 
     constructor(fUser: firebase.User) {
