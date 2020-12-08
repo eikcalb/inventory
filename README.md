@@ -13,3 +13,11 @@ The storage will use a firebase first approach to enable storing most recent dat
     - Adding new products
     - Modifying product quantity
 - Authentication
+
+
+## Packaging
+```shell
+yarn run build
+electron-packager . --platform=win32 --arch=x64 --asar --overwrite --out ./dist 
+node setup.js
+```
