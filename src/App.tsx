@@ -11,13 +11,13 @@ import { LINKS } from './lib/links';
 import { User } from './lib/user';
 import { AccountPage } from "./pages/account";
 import { AuthPage, RegisterPage } from './pages/auth';
-import { AddProductPage } from "./pages/product";
+import { AddProductPage, ViewProductsPage } from "./pages/product";
 
 function App() {
   const ctx = useContext(APPLICATION_CONTEXT)
   const [state, setState] = useState({ collapsed: false, loading: true })
   const [title, setTitle] = useState(' ')
-  const [currentMenu, setCurrentMenu] = useState('account')
+  const [currentMenu, setCurrentMenu] = useState('viewProduct')
   const [user, setUser] = useState(null as null | undefined | User)
   const history = useHistory()
 
@@ -42,6 +42,10 @@ function App() {
       setState({ ...state, loading: false })
     }).catch(e => {
       console.log(e, 'ready failed')
+      new electron.Notification({
+        title: 'Failed to initialize application',
+        body: 'There was an error starting application resources.'
+      }).show()
     })
   }, [])
 
@@ -56,12 +60,13 @@ function App() {
               <Menu.Item key={'addProduct'} icon={<PlusOutlined />}>Add Product</Menu.Item>
               <Menu.Item key={'viewProduct'} icon={<UnorderedListOutlined />}>View Products</Menu.Item>
             </SubMenu>
-            <SubMenu key='Transactions' icon={<WalletFilled />} title='Transactions'>
+            {/* <SubMenu key='Transactions' icon={<WalletFilled />} title='Transactions'>
               <Menu.Item key={'addTransaction'} icon={<PlusOutlined />}>New Transaction</Menu.Item>
               <Menu.Item key={'viewTransaction'} icon={<UnorderedListOutlined />}>View Transactions</Menu.Item>
-            </SubMenu>
+            </SubMenu> */}
+            <Menu.Item key={'viewTransaction'} icon={<UnorderedListOutlined />}>View Transactions</Menu.Item>
             <Menu.Item key={'account'} icon={<UserOutlined />} >Account</Menu.Item>
-            <Menu.Item danger key='Dev' onClick={async () => { electron.remote.getCurrentWindow().webContents.toggleDevTools() }} icon={<UserOutlined />} >ToggleDev</Menu.Item>
+            {/* <Menu.Item danger key='Dev' onClick={async () => { electron.remote.getCurrentWindow().webContents.toggleDevTools() }} icon={<UserOutlined />} >ToggleDev</Menu.Item> */}
           </Menu>
         </Layout.Sider>
         <BodyFragment
@@ -75,7 +80,7 @@ function App() {
             <AuthGuard path={LINKS.homepage} strict exact>
               <Redirect to={LINKS.viewProduct} />
             </AuthGuard>
-            <AuthGuard path={LINKS.viewProduct} strict />
+            <AuthGuard path={LINKS.viewProduct} component={ViewProductsPage} strict />
             <AuthGuard path={LINKS.addProduct} component={AddProductPage} strict />
             <AuthGuard path={LINKS.viewTransaction} strict />
             <AuthGuard path={LINKS.addTransaction} strict />
