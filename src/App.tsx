@@ -12,6 +12,7 @@ import { User } from './lib/user';
 import { AccountPage } from "./pages/account";
 import { AuthPage, RegisterPage } from './pages/auth';
 import { AddProductPage, ViewProductsPage } from "./pages/product";
+import { ViewTransactionsPage } from "./pages/transaction";
 
 function App() {
   const ctx = useContext(APPLICATION_CONTEXT)
@@ -82,7 +83,7 @@ function App() {
             </AuthGuard>
             <AuthGuard path={LINKS.viewProduct} component={ViewProductsPage} strict />
             <AuthGuard path={LINKS.addProduct} component={AddProductPage} strict />
-            <AuthGuard path={LINKS.viewTransaction} strict />
+            <AuthGuard path={LINKS.viewTransaction} component={ViewTransactionsPage} strict />
             <AuthGuard path={LINKS.addTransaction} strict />
             <AuthGuard path={LINKS.account} component={AccountPage} strict exact />
 

@@ -8,6 +8,12 @@ const { access, constants, createWriteStream, unlinkSync } = window.require("fs"
 const { v4 } = window.require("uuid")
 
 type ListenerPropAction = (doc: IProduct) => any
+type TransactionListenerPropAction = (doc: ITransaction) => any
+
+export const TransactionType = {
+    SALE: 'sale',
+    PURCHASE: 'purchase'
+}
 
 export const CurrencyFormatter = Intl.NumberFormat('en-US', { currency: 'NGN', minimumFractionDigits: 2 })
 
@@ -22,6 +28,22 @@ export interface IProduct {
     localPhotoURL?: string
     localOnly?: boolean
     initiator?: string
+}
+
+export interface ITransaction {
+    id: string,
+    dateAdded: number
+    initiator: string
+    type: string
+    updates: [{
+        id: string
+        name: string
+        data: {
+            price: number
+            quantity: number
+        }
+    }],
+    localOnly?: boolean
 }
 
 export class Product {
@@ -81,26 +103,38 @@ export class Product {
         }
     }
 
-    static async updateProductValue(app: Application, item: IProduct, update: { price: number, quantity: number }) {
+    static async updateProductValue(app: Application, item: IProduct, update: { price: number, quantity: number }, type: string) {
         try {
-            if (!item || !item.name || !update.price || !update.quantity) {
+            if (!item || !item.id || !update.price || !update.quantity || !type) {
                 throw new Error('Invalid operation!')
             }
 
-            if (item.price === update.price && item.quantity === update.quantity) {
-                throw new Error('No update to save!')
+            if (type === TransactionType.SALE && item.quantity < update.quantity) {
+                throw new Error('Sale is more than available products!')
             }
+            const newItem = { ...item }
             const doc = Product.productsRef.doc(item.id)
             await db.runTransaction(async (t) => {
+                switch (type) {
+                    case TransactionType.PURCHASE:
+                        newItem.quantity = newItem.quantity + update.quantity
+                        break
+                    case TransactionType.SALE:
+                        newItem.quantity = newItem.quantity - update.quantity
+                        break
+                }
                 const newTxn = Product.transactionsRef.doc()
                 t.update(doc, {
-                    price: update.price,
-                    quantity: update.quantity
+                    price: newItem.price,
+                    quantity: newItem.quantity
                 }).set(newTxn, {
                     id: newTxn.id,
+                    dateAdded: Date.now(),
                     initiator: app.user!.username,
+                    type,
                     updates: [{
                         id: doc.id,
+                        name: newItem.name,
                         data: {
                             price: update.price,
                             quantity: update.quantity
@@ -111,7 +145,7 @@ export class Product {
                 return Promise.resolve()
             })
 
-            return { ...item, ...update }
+            return newItem
         } catch (e) {
             log.error('Product update error: ', e)
             throw e
@@ -203,6 +237,33 @@ export class Product {
                     cloudPhotoURL: data.cloudPhotoURL,
                     localOnly: doc.metadata.hasPendingWrites,
                     localPhotoURL
+                })
+
+            })
+        })
+    }
+
+    static getTransactions(callback: { add: TransactionListenerPropAction, remove: TransactionListenerPropAction, change: TransactionListenerPropAction }) {
+        return Product.transactionsRef.orderBy('dateAdded', 'desc').onSnapshot(async (docs) => {
+            docs.docChanges().forEach(async ({ type, doc }) => {
+                let changeType: string
+                switch (type) {
+                    case 'added':
+                        changeType = 'add'
+                        break
+                    case 'removed':
+                        changeType = 'remove'
+                        break
+                    case 'modified':
+                        changeType = 'change'
+                        break
+                }
+
+                const data: ITransaction = doc.data() as any
+                //@ts-ignore
+                return callback[changeType]({
+                    ...data,
+                    localOnly: doc.metadata.hasPendingWrites,
                 })
 
             })

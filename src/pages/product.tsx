@@ -1,10 +1,10 @@
 import { ArrowLeftOutlined, CloudUploadOutlined, DatabaseOutlined, PlusOutlined } from '@ant-design/icons';
-import { Button, Drawer, Form, Image, Input, InputNumber, Typography, message, Modal, Popconfirm, Skeleton, Spin, Upload, List, Row, Col, Space, Tag } from 'antd';
+import { Button, Drawer, Form, Image, Input, InputNumber, Typography, message, Modal, Popconfirm, Skeleton, Spin, Upload, List, Row, Col, Space, Tag, Radio } from 'antd';
 import { RcCustomRequestOptions } from 'antd/lib/upload/interface';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { log } from '..';
 import { APPLICATION_CONTEXT, VIEW_CONTEXT } from "../lib";
-import { CurrencyFormatter, IProduct, Product } from '../lib/product';
+import { CurrencyFormatter, IProduct, Product, TransactionType } from '../lib/product';
 
 async function getBase64(img: any): Promise<string> {
     return new Promise((res) => {
@@ -23,14 +23,14 @@ function ProductListItem({ item, onClick }: { item: IProduct, onClick: any }) {
                 key={item.id}
                 actions={[
                     <span>{'\u20a6'} {CurrencyFormatter.format(item.price)}</span>,
-                    <span>{item.quantity} pcs. remaining</span>
+                    <span>{item.quantity.toLocaleString()} pcs. remaining</span>
                 ]}
                 extra={
                     <img
                         onLoad={() => setState({ ...state, loading: false })}
                         width={100}
                         alt={item.name}
-                        src={item.cloudPhotoURL}
+                        src={item.localPhotoURL}
                     />
                 }
             >
@@ -45,8 +45,8 @@ function ProductListItem({ item, onClick }: { item: IProduct, onClick: any }) {
 
 function ProductDetails({ item: itemProp, onClose }: { item: IProduct, onClose: any }) {
     const ctx = useContext(APPLICATION_CONTEXT)
-    const [state, setState] = useState({ confirmDelete: false, loading: false, saving: false, modal: false, item: itemProp })
-    const [form, setForm] = useState({ price: itemProp.price, quantity: itemProp.quantity })
+    const [state, setState] = useState({ confirmDelete: false, loading: false, saving: false, modal: false, item: itemProp, editType: TransactionType.SALE })
+    const [form, setForm] = useState({ price: itemProp.price, quantity: 0 })
 
     const { item } = state
 
@@ -65,7 +65,7 @@ function ProductDetails({ item: itemProp, onClose }: { item: IProduct, onClose: 
             </p>
             <Row>
                 <Col span={24}>
-                    <Image width={'100%'} src={item.cloudPhotoURL} />
+                    <Image width={'100%'} src={item.localPhotoURL} />
                 </Col>
             </Row>
             <Row className='my-4'>
@@ -88,7 +88,7 @@ function ProductDetails({ item: itemProp, onClose }: { item: IProduct, onClose: 
                     <Typography.Paragraph className='has-text-grey'>Quantity</Typography.Paragraph>
                 </Col>
                 <Col span={20} style={{ textAlign: 'center' }}>
-                    <Typography.Paragraph>{item.quantity}</Typography.Paragraph>
+                    <Typography.Paragraph>{item.quantity.toLocaleString()} pieces available</Typography.Paragraph>
                 </Col>
             </Row>
 
@@ -131,7 +131,7 @@ function ProductDetails({ item: itemProp, onClose }: { item: IProduct, onClose: 
                     onOk={async () => {
                         setState({ ...state, saving: true })
                         try {
-                            const updated = await Product.updateProductValue(ctx, item, form)
+                            const updated = await Product.updateProductValue(ctx, item, form, state.editType)
                             setState({ ...state, saving: false, modal: false, item: updated })
                             message.success('Updated product successfully!')
                         } catch (e) {
@@ -143,12 +143,18 @@ function ProductDetails({ item: itemProp, onClose }: { item: IProduct, onClose: 
                     confirmLoading={state.saving}
                     cancelButtonProps={{ disabled: state.saving }}
                 >
-                    <Typography.Paragraph className='has-text-grey is-size-6 has-text-centered'>Update the price or quantity for this product</Typography.Paragraph>
+                    <Radio.Group buttonStyle='solid' style={{ display: 'flex', justifyContent: 'center' }}
+                        onChange={e => setState({ ...state, editType: e.target.value })} value={state.editType}>
+                        <Radio.Button value={TransactionType.SALE}>Sale</Radio.Button>
+                        <Radio.Button value={TransactionType.PURCHASE}>Purchase</Radio.Button>
+                    </Radio.Group>
+
+                    <Typography.Paragraph className='has-text-grey is-size-7 my-4 has-text-centered'>Set the price and quantity for this {state.editType === TransactionType.SALE ? 'sale' : 'purchase'}</Typography.Paragraph>
 
                     <Form
                     >
                         <Form.Item
-                            initialValue={item.price}
+                            initialValue={form.price}
                             name="price"
                             label={`Product Price (\u20A6)`}
                             rules={[{ required: true, type: 'number', message: 'Please provide product price!' }]}
@@ -158,7 +164,7 @@ function ProductDetails({ item: itemProp, onClose }: { item: IProduct, onClose: 
                         </Form.Item>
 
                         <Form.Item
-                            initialValue={item.quantity}
+                            initialValue={form.quantity}
                             name="quantity"
                             label='Product Quantity'
                             rules={[{ required: true, type: 'number', message: 'Please provide product quantity!' }]}
