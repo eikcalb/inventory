@@ -8,6 +8,8 @@ log.transports.file.level = 'silly'
 
 
 app.requestSingleInstanceLock()
+if (require('electron-squirrel-startup')) return;
+
 
 const firstRun = process.argv[1] === '--squirrel-firstrun'
 const initProductImagesPath = async() => {
