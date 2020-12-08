@@ -57,7 +57,7 @@ async function createWindow() {
             win.flashFrame(true)
         })
     } else {
-        win.loadFile(resolve(process.env.LOAD_URL)).then(() => {
+        win.loadFile(resolve(__dirname, 'index.html')).then(() => {
             win.show()
             win.once('focus', () => win.flashFrame(false))
             win.flashFrame(true)
